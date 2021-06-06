@@ -13,14 +13,11 @@
         {% endblock %}
     </head>
     <body>
-        {% block header %}
-          <ol class="breadcrumb">
-              <li class="breadcrumb-item"><a href="#">Général</a></li>
-              <li class="breadcrumb-item"><a href="#">Library</a></li>
-              <li class="breadcrumb-item active">Data</li>
-          </ol>
-        {% endblock %}
-
-        {% block body %}{% endblock %}
+        
+        {{ include('layouts/partials/flash_message.html.twig') }}
+        {{ include('layouts/partials/nav.html.twig') }}
+        <main role="main">
+            {% block body %}{% endblock %}
+        </main>
     </body>
 </html>

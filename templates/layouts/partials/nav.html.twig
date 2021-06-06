@@ -1,0 +1,13 @@
+<nav>
+  <ol class="breadcrumb">
+    
+    
+    {% if app.user %}
+    <li class="breadcrumb-item"><a href="{{ path('user_home') }}">Acceuil</a></li>
+    <li class="breadcrumb-item active"><a href="{{ path('logout') }}">Déconnexion</a></li>
+    {% else %}
+      <li class="breadcrumb-item"><a href="{{ path('login') }}">Connexion</a></li>
+      <li class="breadcrumb-item"><a href="#">s'enregistrer</a></li>
+    {% endif %}
+  </ol>
+</nav>

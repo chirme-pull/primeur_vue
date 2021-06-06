@@ -2,17 +2,37 @@
 
 namespace App\Security;
 
+
+use App\Repository\UtilisateurRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\AuthenticatorInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-
-class LoginFormAuthenticator implements AuthenticatorInterface
+class LoginFormAuthenticator extends AbstractAuthenticator
 {
+    private $UtilisateurRepository;
+    private $urlGenerator;
+
+    public function __construct(UtilisateurRepository $UtilisateurRepository, UrlGeneratorInterface $urlGenerator)
+    {
+        $this->UtilisateurRepository = $UtilisateurRepository;
+        $this->urlGenerator = $urlGenerator;
+ 
+    }
+
 	
+
+
  /**
      * Does the authenticator support the given Request?
      *
@@ -40,23 +60,24 @@ class LoginFormAuthenticator implements AuthenticatorInterface
      * @throws AuthenticationException
      */
     public function authenticate(Request $request): PassportInterface{
-        dd("auth ok");
+        
+
+
+        $user = $this->UtilisateurRepository->findOneByEmail($request->request->get('email'));
+        //dd($request);
+        if (!$user) {
+            throw new CustomUserMessageAuthenticationException("invalid credentials");
+            
+        }
+
+        return new Passport($user, new PasswordCredentials($request->request->get('password')), [
+
+            new CsrfTokenBadge('login_form', $request->request->get('csrf_token')),
+
+            //new PasswordUpgradeBadge($request->request->get('password'), $this->UtilisateurRepository)
+        ]);
     }
 
-    /**
-     * Create an authenticated token for the given user.
-     *
-     * If you don't care about which token class is used or don't really
-     * understand what a "token" is, you can skip this method by extending
-     * the AbstractAuthenticator class from your authenticator.
-     *
-     * @see AbstractAuthenticator
-     *
-     * @param PassportInterface $passport The passport returned from authenticate()
-     */
-    public function createAuthenticatedToken(PassportInterface $passport, string $firewallName): TokenInterface{
-
-    }
 
     /**
      * Called when authentication executed and was successful!
@@ -68,7 +89,7 @@ class LoginFormAuthenticator implements AuthenticatorInterface
      * will be authenticated. This makes sense, for example, with an API.
      */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response{
-
+        return new RedirectResponse($this->urlGenerator->generate('user_home'));
     }
 
     /**
@@ -82,6 +103,11 @@ class LoginFormAuthenticator implements AuthenticatorInterface
      */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response{
 
+        $type = "error";
+        $request->getSession()->getFlashBag()->add($type, 'Identifiants invalide');
+
+        return new RedirectResponse($this->urlGenerator->generate('login'));
+        dd("failure");
     }
 }
 ?>

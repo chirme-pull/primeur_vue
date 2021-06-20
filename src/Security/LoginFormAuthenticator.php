@@ -3,20 +3,21 @@
 namespace App\Security;
 
 
+use App\Controller\SecurityController;
 use App\Repository\UtilisateurRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\AuthenticatorInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
-use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
-use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
-use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
 
 class LoginFormAuthenticator extends AbstractAuthenticator
 {
@@ -64,8 +65,15 @@ class LoginFormAuthenticator extends AbstractAuthenticator
 
 
         $user = $this->UtilisateurRepository->findOneByEmail($request->request->get('email'));
-        //dd($request);
+        
+
+
         if (!$user) {
+
+            //sauvegarde en session du mail erroné pour préremplir le champ email du form login
+            $request->getSession()->set(SecurityController::LAST_EMAIL ,$request->request->get('email'));
+
+
             throw new CustomUserMessageAuthenticationException("invalid credentials");
             
         }
@@ -89,6 +97,13 @@ class LoginFormAuthenticator extends AbstractAuthenticator
      * will be authenticated. This makes sense, for example, with an API.
      */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response{
+       
+        //on supprime l'email préremplie s'il existe
+        dd($request->getSession());
+        if ($request->getSession()->get ) {
+            $request->getSession->remove(SecurityController::LAST_EMAIL);
+        }
+
         return new RedirectResponse($this->urlGenerator->generate('user_home'));
     }
 

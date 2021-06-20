@@ -1,0 +1,28 @@
+
+
+
+
+
+
+
+
+install
+
+nodejs or just npm
+php 8.x
+bdd sql
+
+
+//installer dépendances 
+
+composer install
+npm install
+
+//run project
+
+//lancer le serveur local
+symfony serv -d
+
+//activer les webpack
+npm run dev-watch
+
